@@ -1,0 +1,38 @@
+name: "Codeowners Validator (Vibe)"
+
+# Vibe-coded repos created from myhelix/vibe-applications-amplify-template
+# scope CODEOWNERS to ET-protected paths only — currently:
+#   amplify/helix-tags.ts
+#   amplify.yml
+#   /.github/workflows/
+#   /.github/CODEOWNERS
+# The rest of the tree is intentionally unowned so vibe coders aren't gated
+# by a team review on every PR. The standard codeowners-validator runs the
+# experimental `notowned` check and warns on every uncovered file, exiting
+# non-zero.
+#
+# This variant drops `notowned`. files / owners / duppatterns / syntax
+# still run, so real CODEOWNERS bugs (typos, stale teams, dup patterns,
+# bad syntax) are still caught.
+
+on:
+  workflow_call:
+    secrets:
+      owners-validator-github-secret:
+        description: 'GitHub PAT to check that owner definitions are valid'
+        required: true
+
+jobs:
+  sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: GitHub CODEOWNERS Validator
+        uses: mszostok/codeowners-validator@v0.7.1
+        with:
+          checks: "files,owners,duppatterns,syntax"
+          # experimental_checks intentionally omitted — see header.
+          github_access_token: "${{ secrets.owners-validator-github-secret }}"
+          repository_path: "."
+          check_failure_level: "warning"
+          owner_checker_repository: "${{ github.repository }}"
